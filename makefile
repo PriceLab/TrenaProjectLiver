@@ -6,7 +6,7 @@ build:
 	(cd ..; R CMD build --no-build-vignettes TrenaProjectLiver)
 
 install:
-	(cd ..; R CMD INSTALL TrenaProjectLiver)
+	(cd ..; R CMD INSTALL --no-test-load TrenaProjectLiver)
 
 check:
 	(cd ..; R CMD check `ls -t TrenaProjectLiver) | head -1`)
