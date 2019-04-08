@@ -168,5 +168,56 @@ test_buildSingleGeneModel <- function()
 
 } # test_buildSingleGeneModel
 #------------------------------------------------------------------------------------------------------------------------
+# no genehancer info for this gene
+test_buildSingleGeneModel_RBMXP2 <- function()
+{
+   printf("--- test_buildSingleGeneModel_RBMXP2")
+
+   genome <- "hg38"
+   targetGene <- "RBMXP2"
+   chromosome <- "chr19"
+   tss <- 30689105
+      # strand-aware start and end: trem2 is on the minus strand
+   default.promoter.chromLocString <- "chr9:30684105-30694105"
+   start <- 30684105
+   end   <- 30694105
+   tbl.regions <- data.frame(chrom=chromosome, start=start, end=end, stringsAsFactors=FALSE)
+   matrix.name <- "GTEx.liver.geneSymbols.matrix.asinh"
+   checkTrue(matrix.name %in% getExpressionMatrixNames(tpl))
+   mtx <- getExpressionMatrix(tpl, matrix.name)
+
+   build.spec <- list(title="unit test on APOE",
+                      type="footprint.database",
+                      regions=tbl.regions,
+                      geneSymbol=targetGene,
+                      tss=tss,
+                      matrix=mtx,
+                      db.host=getFootprintDatabaseHost(tpl),
+                      db.port=getFootprintDatabasePort(tpl),
+                      databases=getFootprintDatabaseNames(tpl),
+                      annotationDbFile=dbfile(org.Hs.eg.db),
+                      motifDiscovery="builtinFimo",
+                      tfPool=allKnownTFs(),
+                      tfMapping="MotifDB",
+                      tfPrefilterCorrelation=0.1,
+                      orderModelByColumn="rfScore",
+                      solverNames=c("lasso", "lassopv", "pearson", "randomForest", "ridge", "spearman"))
+
+   fpBuilder <- FootprintDatabaseModelBuilder(genome, targetGene,  build.spec, quiet=FALSE)
+   suppressWarnings(x <- build(fpBuilder))
+
+   checkEquals(sort(names(x)), c("model", "regulatoryRegions"))
+   tbl.regulatoryRegions <- x$regulatoryRegions
+   tbl.model <- x$model
+   tbl.model <- tbl.model[order(abs(tbl.model$pearsonCoeff), decreasing=TRUE),]
+   checkTrue(all(tbl.model$gene %in% tbl.regulatoryRegions$geneSymbol))
+   checkTrue(nrow(tbl.model) > 50)
+   checkTrue("EGR3" %in% head(tbl.model$gene))
+   checkTrue(max(tbl.model$pearsonCoeff) > 0.25)
+     # a modest sanity check on pearsonCoeff: should be exactly what we see in the expression matrix
+   checkEqualsNumeric(cor(mtx["RBMXP2",], mtx["EGR3",]), subset(tbl.model, gene=="EGR3")$pearsonCoeff)
+
+} # test_buildSingleGeneModel_RBMXP2
+#------------------------------------------------------------------------------------------------------------------------
 if(!interactive())
    runTests()
