@@ -17,6 +17,7 @@ runTests <- function()
    test_expressionMatrices()
    test_setTargetGene()
    test_buildSingleGeneModel()
+   test_buildSingleGeneModel_INKA2()  # has no genehancer entry
 
 } # runTests
 #------------------------------------------------------------------------------------------------------------------------
@@ -168,25 +169,29 @@ test_buildSingleGeneModel <- function()
 
 } # test_buildSingleGeneModel
 #------------------------------------------------------------------------------------------------------------------------
-# no genehancer info for this gene
-test_buildSingleGeneModel_RBMXP2 <- function()
+# no genehancer info for this gene.  note that there are not many genes (perhaps 8) which
+#   - have no genehancer entry
+#   - are protein-coding
+#   - code currently found in ~/github/TrenaProjectLiver/inst/gsm/config.R, function 'pickGuineaPigGenes'
+#     helped to select INKA2
+test_buildSingleGeneModel_INKA2 <- function()
 {
-   printf("--- test_buildSingleGeneModel_RBMXP2")
+   printf("--- test_buildSingleGeneModel_INKA2")
 
    genome <- "hg38"
-   targetGene <- "RBMXP2"
-   chromosome <- "chr19"
-   tss <- 30689105
-      # strand-aware start and end: trem2 is on the minus strand
-   default.promoter.chromLocString <- "chr9:30684105-30694105"
-   start <- 30684105
-   end   <- 30694105
+   targetGene <- "INKA2"
+
+   chromosome <- "chr1"
+   tss <- 111739424
+   start <- tss - 5000
+   end <- tss + 5000
+
    tbl.regions <- data.frame(chrom=chromosome, start=start, end=end, stringsAsFactors=FALSE)
    matrix.name <- "GTEx.liver.geneSymbols.matrix.asinh"
    checkTrue(matrix.name %in% getExpressionMatrixNames(tpl))
    mtx <- getExpressionMatrix(tpl, matrix.name)
 
-   build.spec <- list(title="unit test on APOE",
+   build.spec <- list(title="unit test on INKA2",
                       type="footprint.database",
                       regions=tbl.regions,
                       geneSymbol=targetGene,
@@ -212,12 +217,54 @@ test_buildSingleGeneModel_RBMXP2 <- function()
    tbl.model <- tbl.model[order(abs(tbl.model$pearsonCoeff), decreasing=TRUE),]
    checkTrue(all(tbl.model$gene %in% tbl.regulatoryRegions$geneSymbol))
    checkTrue(nrow(tbl.model) > 50)
-   checkTrue("EGR3" %in% head(tbl.model$gene))
-   checkTrue(max(tbl.model$pearsonCoeff) > 0.25)
+   checkTrue("PRDM4" %in% head(tbl.model$gene))
+   checkTrue(max(tbl.model$pearsonCoeff) > 0.5)
      # a modest sanity check on pearsonCoeff: should be exactly what we see in the expression matrix
-   checkEqualsNumeric(cor(mtx["RBMXP2",], mtx["EGR3",]), subset(tbl.model, gene=="EGR3")$pearsonCoeff)
+   checkEqualsNumeric(cor(mtx["INKA2",], mtx["PRDM4",]), subset(tbl.model, gene=="PRDM4")$pearsonCoeff)
+
+} # test_buildSingleGeneModel_INKA2
+#------------------------------------------------------------------------------------------------------------------------
+# no genehancer info for this gene, and though we have gene expression, there are no footprints.
+# do we handle this oddity gracefully?
+test_buildSingleGeneModel_RBMXP2 <- function()
+{
+   printf("--- test_buildSingleGeneModel_RBMXP2")
+
+   genome <- "hg38"
+   targetGene <- "RBMXP2"
+
+   chromosome <- "chr9"
+   tss <- 30689105
+   start <- tss - 5000
+   end <- tss + 5000
+
+   tbl.regions <- data.frame(chrom=chromosome, start=start, end=end, stringsAsFactors=FALSE)
+   matrix.name <- "GTEx.liver.geneSymbols.matrix.asinh"
+   checkTrue(matrix.name %in% getExpressionMatrixNames(tpl))
+   mtx <- getExpressionMatrix(tpl, matrix.name)
+
+   build.spec <- list(title="unit test on RBMXP2",
+                      type="footprint.database",
+                      regions=tbl.regions,
+                      geneSymbol=targetGene,
+                      tss=tss,
+                      matrix=mtx,
+                      db.host=getFootprintDatabaseHost(tpl),
+                      db.port=getFootprintDatabasePort(tpl),
+                      databases=getFootprintDatabaseNames(tpl),
+                      annotationDbFile=dbfile(org.Hs.eg.db),
+                      motifDiscovery="builtinFimo",
+                      tfPool=allKnownTFs(),
+                      tfMapping="MotifDB",
+                      tfPrefilterCorrelation=0.1,
+                      orderModelByColumn="rfScore",
+                      solverNames=c("lasso", "lassopv", "pearson", "randomForest", "ridge", "spearman"))
+
+   fpBuilder <- FootprintDatabaseModelBuilder(genome, targetGene,  build.spec, quiet=FALSE)
+   checkException(x <- build(fpBuilder), silent=TRUE)
 
 } # test_buildSingleGeneModel_RBMXP2
 #------------------------------------------------------------------------------------------------------------------------
+
 if(!interactive())
    runTests()
