@@ -2,6 +2,7 @@ prep/import/expression/mtx.gtex.asinh.RData
 prep/import/expression/GTEx_v7_Annotations_SampleAttributesDS.txt
 prep/import/expression/GeneReads.rds
 prep/import/expression/tbl.md.RData
+inst/gsm/MODELS
 
 # History files
 .Rhistory
