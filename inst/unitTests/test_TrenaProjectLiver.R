@@ -25,7 +25,7 @@ test_constructor <- function()
 {
    message(sprintf("--- test_constructor"))
 
-   checkTrue(all(c("TrenaProjectLiver", "TrenaProject") %in% is(tpl)))
+   checkTrue(all(c("TrenaProjectLiver", "TrenaProjectHG38") %in% is(tpl)))
    checkEquals(getFootprintDatabasePort(tpl), 5433)
 
 } # test_constructor

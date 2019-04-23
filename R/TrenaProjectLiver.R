@@ -13,7 +13,7 @@
 #'
 
 .TrenaProjectLiver <- setClass("TrenaProjectLiver",
-                                  contains="TrenaProject")
+                                  contains="TrenaProjectHG38")
 
 #----------------------------------------------------------------------------------------------------
 #' Define an object of class TrenaProjectLiver
@@ -54,16 +54,15 @@ TrenaProjectLiver <- function(quiet=TRUE)
 
    stopifnot(file.exists(expressionDirectory))
 
-   .TrenaProjectLiver(TrenaProject(supportedGenes=geneSets[[1]],
-                                        genomeName=genomeName,
-                                        footprintDatabaseHost=footprintDatabaseHost,
-                                        footprintDatabasePort=footprintDatabasePort,
-                                        footprintDatabaseNames=footprintDatabaseNames,
-                                        expressionDirectory=expressionDirectory,
-                                        variantsDirectory=variantsDirectory,
-                                        covariatesFile=covariatesFile,
-                                        quiet=quiet
-                                        ))
+   .TrenaProjectLiver(TrenaProjectHG38(supportedGenes=geneSets[[1]],
+                                       footprintDatabaseHost=footprintDatabaseHost,
+                                       footprintDatabasePort=footprintDatabasePort,
+                                       footprintDatabaseNames=footprintDatabaseNames,
+                                       expressionDirectory=expressionDirectory,
+                                       variantsDirectory=variantsDirectory,
+                                       covariatesFile=covariatesFile,
+                                       quiet=quiet
+                                       ))
 
 } # TrenaProjectLiver, the constructor
 #----------------------------------------------------------------------------------------------------
