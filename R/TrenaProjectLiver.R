@@ -54,7 +54,8 @@ TrenaProjectLiver <- function(quiet=TRUE)
 
    stopifnot(file.exists(expressionDirectory))
 
-   .TrenaProjectLiver(TrenaProjectHG38(supportedGenes=geneSets[[1]],
+   .TrenaProjectLiver(TrenaProjectHG38(projectName="TrenaProjectLiver",
+                                       supportedGenes=geneSets[[1]],
                                        footprintDatabaseHost=footprintDatabaseHost,
                                        footprintDatabasePort=footprintDatabasePort,
                                        footprintDatabaseNames=footprintDatabaseNames,
