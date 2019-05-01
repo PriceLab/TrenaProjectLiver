@@ -1,7 +1,7 @@
 library(RUnit)
 library(TrenaProjectLiver)
 
-printf("--- reading ~/github/TrenaProjectLiver/inst/gsm/configUtils.R")
+printf("--- reading ~/github/TrenaProjectLiver/inst/gsm/config.R")
 
 trenaProject <- TrenaProjectLiver()
 

@@ -1,7 +1,11 @@
-# stagedRun.R
-#------------------------------------------------------------------------------
-# we need a configuration file (of R commands), specified on the command line
-# informing us of how to run this whole genome parallelized script
+# runMany.R
+#----------------------------------------------------------------------------------------------------
+if(!interactive()) {
+   args <- commandArgs(trailingOnly=TRUE)
+   stopifnot(length(args) == 2)
+   startGeneIndex <- as.integer(args[1])
+   endGeneIndex <- as.integer(args[2])
+   }
 #------------------------------------------------------------------------------
 library(RUnit)
 library(trenaSGM)
@@ -10,10 +14,12 @@ library(BiocParallel)
 library(futile.logger)
 library(RPostgreSQL)
 library(org.Hs.eg.db)
-library(BatchJobs)
 #------------------------------------------------------------------------------
 stopifnot(packageVersion("trena") >= "1.5.13")
 stopifnot(packageVersion("trenaSGM") >= "0.99.76")
+#------------------------------------------------------------------------------
+# we need a configuration file (of R commands), specified on the command line
+# informing us of how to run this whole genome parallelized script
 #------------------------------------------------------------------------------
 configurationFile <- "config.R"
 stopifnot(file.exists(configurationFile))
@@ -25,8 +31,7 @@ if(!interactive()){
    args <- commandArgs(trailingOnly=TRUE)
    stopifnot(length(args) == 2)
    startGeneIndex <- as.integer(args[1])
-   endGeneIndex <- as.integper(args[2])
-   printf("running with genes %d - %d", startGeneIndex, endGeneIndex)
+   endGeneIndex <- as.integer(args[2])
    }
 #-----------------------------------------------------------------------------
 stopifnot(exists("trenaProject"))
@@ -105,7 +110,7 @@ do.run <- function(genes, parallel=TRUE)
 
    if(parallel){
       bp.params <- MulticoreParam(stop.on.error=FALSE, log=TRUE, logdir=LOGDIR, threshold="INFO", workers=WORKERS)
-      printf("running bplapply on %d genes", length(genes))
+      printf("running bplapply on %d genes, %d workers", length(genes), WORKERS)
       results <- bptry({bplapply(short.specs, buildModel, BPPARAM=bp.params)})
     } else {
       results <- lapply(short.specs, buildModel)
@@ -132,9 +137,28 @@ test_fourGenes <- function(useParallel=FALSE)
 {
    genes <- demoGenes()
    x <- do.run(genes, parallel=useParallel)
+
    checkEquals(length(x), 4)
-   length(x)
-   x
+   checkEquals(length(x), 4)
+
+   model.sizes <- lapply(x, function(element) nrow(element$model))
+   checkTrue(model.sizes$GSTM1 > 50)
+   checkTrue(is.null(model.sizes$RBMKP2))
+   checkTrue(model.sizes$INKA2 > 250)
+   checkTrue(model.sizes$APOE > 180)
+
+   invisible(x)
 
 } # test_fourGenes
 #----------------------------------------------------------------------------------------------------
+if(!interactive()){
+
+   stopifnot(startGeneIndex < length(goi))
+   stopifnot(endGeneIndex <= length(goi))
+   stopifnot(startGeneIndex < endGeneIndex)
+
+   goi.thisRun <- goi[startGeneIndex:endGeneIndex]
+   printf("running with genes %d - %d", startGeneIndex, endGeneIndex)
+   x <- do.run(goi.thisRun, parallel=TRUE)
+   }
+#------------------------------------------------------------------------------
