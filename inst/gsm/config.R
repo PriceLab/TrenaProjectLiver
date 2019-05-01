@@ -1,7 +1,7 @@
 library(RUnit)
 library(TrenaProjectLiver)
 
-printf("--- reading ~/github/TrenaProjectLiver/inst/gsm/config.R")
+printf("--- reading config.R")
 
 trenaProject <- TrenaProjectLiver()
 
@@ -15,7 +15,7 @@ mtx <- getExpressionMatrix(trenaProject, matrix.name)
 tbl.geneHancer <- get(load(system.file(package="TrenaProject", "extdata", "genomeAnnotation", "geneHancer.v4.7.allGenes.RData")))
 tbl.geneInfo <- get(load(system.file(package="TrenaProject", "extdata", "geneInfoTable_hg38.RData")))
 
-OUTPUTDIR <- "MODELS"
+OUTPUTDIR <- "/tmp/MODELS.liver"
 
 if(!file.exists(OUTPUTDIR))
    dir.create(OUTPUTDIR)

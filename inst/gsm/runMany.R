@@ -142,10 +142,11 @@ test_fourGenes <- function(useParallel=FALSE)
    checkEquals(length(x), 4)
 
    model.sizes <- lapply(x, function(element) nrow(element$model))
-   checkTrue(model.sizes$GSTM1 > 50)
+   print(model.sizes)
+   checkTrue(model.sizes$GSTM1 > 20)
    checkTrue(is.null(model.sizes$RBMKP2))
-   checkTrue(model.sizes$INKA2 > 250)
-   checkTrue(model.sizes$APOE > 180)
+   checkTrue(model.sizes$INKA2 > 100)
+   checkTrue(model.sizes$APOE > 100)
 
    invisible(x)
 
