@@ -1,7 +1,13 @@
 # runMany.R
 #----------------------------------------------------------------------------------------------------
+printf <- function(...) print(noquote(sprintf(...)))
+#----------------------------------------------------------------------------------------------------
 if(!interactive()) {
    args <- commandArgs(trailingOnly=TRUE)
+   if(length(args) != 2){
+      printf("usage:  Rscript runMany.R  <startGeneNumber> <endGeneNumber>")
+      stop()
+      }
    stopifnot(length(args) == 2)
    startGeneIndex <- as.integer(args[1])
    endGeneIndex <- as.integer(args[2])
