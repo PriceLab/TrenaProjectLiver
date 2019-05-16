@@ -1,7 +1,7 @@
 library(RUnit)
 library(TrenaProjectLiver)
 
-printf("--- reading config.R")
+printf("--- reading configMod.R")
 
 trenaProject <- TrenaProjectLiver()
 
@@ -11,11 +11,20 @@ stopifnot(packageVersion("TrenaProjectLiver") >= "0.99.04")
 matrix.name <- "GTEx.liver.geneSymbols.matrix.asinh"
 stopifnot(matrix.name %in% getExpressionMatrixNames(trenaProject))
 mtx <- getExpressionMatrix(trenaProject, matrix.name)
+mtx.df <- as.data.frame(mtx)
+mtx.df$mean <- rowMeans(mtx.df)
+mtx.df <- mtx.df[!(mtx.df$mean == 0),]
+mtx.df$mean <- NULL
+mtx <- as.matrix(mtx.df)
 
 tbl.geneHancer <- get(load(system.file(package="TrenaProject", "extdata", "genomeAnnotation", "geneHancer.v4.7.allGenes.RData")))
-tbl.geneInfo <- get(load(system.file(package="TrenaProject", "extdata", "geneInfoTable_hg38.RData")))
 
-OUTPUTDIR <- "/tmp/MODELS.liver"
+# there might be a bettter solution, but for now, I'm going to make sure there's only one gene symbol per gene here
+# the reason is that the determineRegulatoryRegions function doesn't currently handle things well when there's more than one entry for tbl.geneInfo
+tbl.geneInfo <- get(load(system.file(package="TrenaProject", "extdata", "geneInfoTable_hg38.RData")))
+tbl.geneInfo <- tbl.geneInfo[!duplicated(tbl.geneInfo$geneSymbol),]
+
+OUTPUTDIR <- "/tmp/MODELS.cory.liver"
 
 if(!file.exists(OUTPUTDIR))
    dir.create(OUTPUTDIR)
@@ -90,7 +99,7 @@ test_pickGuineaPigGenes <- function()
 #
 determineRegulatoryRegions <- function(gene)
 {
-   tbl.concise <- tbl.geneInfo[grep(gene, tbl.geneInfo$geneSymbol), c("chrom", "tss")]
+    tbl.concise <- tbl.geneInfo[which(tbl.geneInfo$geneSymbol == gene), c("chrom", "tss")]
       # no need to figure strand since we go 2500bp in both directions
 
    if(gene %in% tbl.geneHancer$geneSymbol){
@@ -139,6 +148,17 @@ test_determineRegulatoryRegions <- function()
    with(tbl.no.gh, checkEquals(end - start, 10000))
 
 } # test_determineRegulatoryRegions
+#------------------------------------------------------------------------------------------------------------------------
+# generate bash script to run genes with bplapply in chunks
+
+max <- nrow(mtx)
+starts <- seq(1, max, 40)
+ends <- starts + 39
+ends[length(ends)] <- max
+bashScript <- file("runByChunks.sh")
+lines <- sprintf("Rscript runMany.R %d %d", starts, ends)
+writeLines(lines, bashScript)
+close(bashScript)
 #------------------------------------------------------------------------------------------------------------------------
 runTests <- function()
 {

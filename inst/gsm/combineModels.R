@@ -1,32 +1,39 @@
-# creates aggregate of all models in new data.frametbl.models
-# adding hugo geneSymbols for each tf, ordering by abs(pearsonCoeff)
+# creates aggregate of all models in tbl.models, file is tbl.models.all.RData
+# adding hugo geneSymbols for each tf, and for the target gene
 #-------------------------------------------------------------------------------------------------------
-filenames <- system("find 2019mar29a/ -name models.RData", intern=TRUE)
-printf("gene result count: %d", length(filenames)) # 14
+library(trenaSGM)
+#-------------------------------------------------------------------------------------------------------
+target.dir <- "/tmp/MODELS.cory.liver"
 
+stopifnot(file.exists(target.dir))
+files <- grep(".RData$", list.files(target.dir), value=TRUE)
+length(files)
 tbls.all <- list()
-max <- 3 # length(all.gene.directories)
-#max <- length(all.results)
 
-for(full.path in filenames){
-   gene.gene <- strsplit(full.path, "/", fixed=TRUE)[[1]][2]
-   targetGene <- strsplit(gene.gene, "-", fixed=TRUE)[[1]][1]
-   stopifnot(file.exists(full.path))
-   print(load(full.path))
-   tbl <- tbls$model
-   if(nrow(tbl) == 0) next
-   tbl <- tbl[order(abs(tbl$pearsonCoeff), decreasing=TRUE),]       
-   #if(nrow(tbl) > 20)
-   #   tbl <- tbl[1:20,]
-   tbl$targetGene <- targetGene
+for(file in files){
+   full.path <- file.path(target.dir, file)
+   if(file.size(file.path(target.dir, file)) == 0) next;
+   target.gene <- sub(".RData", "", file)
+   x <- tryCatch({
+        get(load(full.path))
+        }, error=function(e) {
+             return(list(model=data.frame(), regulatoryRegions=data.frame()))
+             }
+        )
+   tbl.model <- x$model
+   tbl.reg <- x$regulatoryRegions
+   printf("model rows: %d", nrow(tbl.model))
+   if(nrow(tbl.model) == 0) next
+   tbl.model$targetGene <- target.gene
+   trimmed <- trimModel(tbl.model, tbl.reg, votesNeeded=1)
+   tbl <- trimmed$model
    tbl$rank <- seq_len(nrow(tbl))
-   printf("model for %s: %d rows.orig, %d rows.trimmed, %d cols", targetGene, nrow(tbls$model), nrow(tbl), ncol(tbl))
-   tbls.all[[targetGene]] <- tbl
-   } # for full.path
-
+   printf("model for %s: %d rows, %d cols", target.gene, nrow(tbl), ncol(tbl))
+   tbls.all[[target.gene]] <- tbl
+   } # for file
+  
 tbl.models <- do.call(rbind, tbls.all)
+dim(tbl.models)
 rownames(tbl.models) <- NULL
-colnames(tbl.models)[1] <- "tf"
-
-save(tbl.models, file="tbl.models.2019mar29a.placenta.new.matrix.footprints.RData")
+save(tbl.models, file=file.path(target.dir, "tbl.models.liver.May15.RData"))
     
