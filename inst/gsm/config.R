@@ -1,14 +1,16 @@
 library(RUnit)
 library(TrenaProjectLiver)
 
-printf("--- reading configMod.R")
-
-trenaProject <- TrenaProjectLiver()
+printf("--- reading config.R")
 
 stopifnot(packageVersion("TrenaProject") >= "0.99.37")
 stopifnot(packageVersion("TrenaProjectLiver") >= "0.99.04")
 
-matrix.name <- "GTEx.liver.geneSymbols.matrix.asinh"
+trenaProject <- TrenaProjectLiver()
+
+# I added some minor parcing of the expression matrix to get rid of genes with no expression.
+#matrix.name <- "GTEx.liver.geneSymbols.matrix.asinh"
+matrix.name <- "GTEx.liver.train.RData"
 stopifnot(matrix.name %in% getExpressionMatrixNames(trenaProject))
 mtx <- getExpressionMatrix(trenaProject, matrix.name)
 mtx.df <- as.data.frame(mtx)
@@ -24,7 +26,7 @@ tbl.geneHancer <- get(load(system.file(package="TrenaProject", "extdata", "genom
 tbl.geneInfo <- get(load(system.file(package="TrenaProject", "extdata", "geneInfoTable_hg38.RData")))
 tbl.geneInfo <- tbl.geneInfo[!duplicated(tbl.geneInfo$geneSymbol),]
 
-OUTPUTDIR <- "/tmp/MODELS.cory.liver"
+OUTPUTDIR <- "/tmp/MODELS.cory.liver.Sept18"
 
 if(!file.exists(OUTPUTDIR))
    dir.create(OUTPUTDIR)
