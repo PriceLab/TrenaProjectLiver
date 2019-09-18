@@ -6,7 +6,7 @@ Author: Cory Funk, Paul Shannon
 Maintainer: Cory Funk <cfunk@systemsbiology.org>
 Description: Trena and TrenaViz project to explore GTex liver gene regulation
 Imports: methods
-Depends: R (>= 3.5.0), TrenaProjectHG38 (>= 0.99.40), trenaSGM (>= 0.99.80)
+Depends: R (>= 3.5.0), TrenaProjectHG38 (>= 1.2.1), trenaSGM (>= 1.0.4)
 License: Apache 2.0
 Encoding: UTF-8
 LazyData: true
