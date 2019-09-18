@@ -45,23 +45,20 @@ TrenaProjectLiver <- function(quiet=TRUE)
       }
 
    footprintDatabaseNames <- c("liver_hint_16",  "liver_hint_20", "liver_wellington_16", "liver_wellington_20")
-   expressionDirectory <- system.file(package="TrenaProjectLiver", "extdata", "expression")
-   variantsDirectory <- system.file(package="TrenaProjectLiver", "extdata", "variants")
+
+   dataDirectory <- system.file(package="TrenaProjectLiver", "extdata")
    footprintDatabaseHost <- "khaleesi.systemsbiology.net"
    footprintDatabasePort <- 5433
 
    covariatesFile <- NA_character_;
 
-   stopifnot(file.exists(expressionDirectory))
 
    .TrenaProjectLiver(TrenaProjectHG38(projectName="TrenaProjectLiver",
                                        supportedGenes=geneSets[[1]],
                                        footprintDatabaseHost=footprintDatabaseHost,
                                        footprintDatabasePort=footprintDatabasePort,
                                        footprintDatabaseNames=footprintDatabaseNames,
-                                       expressionDirectory=expressionDirectory,
-                                       variantsDirectory=variantsDirectory,
-                                       covariatesFile=covariatesFile,
+                                       packageDataDirectory=dataDirectory,
                                        quiet=quiet
                                        ))
 

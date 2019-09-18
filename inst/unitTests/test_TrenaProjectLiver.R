@@ -12,7 +12,6 @@ runTests <- function()
 {
    test_constructor()
    test_supportedGenes()
-   test_variants()
    test_footprintDatabases()
    test_expressionMatrices()
    test_setTargetGene()
@@ -39,14 +38,6 @@ test_supportedGenes <- function()
 
 } # test_supportedGenes
 #------------------------------------------------------------------------------------------------------------------------
-test_variants <- function()
-{
-   message(sprintf("--- test_variants"))
-
-   checkEquals(length(getVariantDatasetNames(tpl)), 0)
-
-} # test_variants
-#------------------------------------------------------------------------------------------------------------------------
 test_footprintDatabases <- function()
 {
    message(sprintf("--- test_footprintDatabases"))
@@ -61,10 +52,10 @@ test_footprintDatabases <- function()
 #------------------------------------------------------------------------------------------------------------------------
 test_expressionMatrices <- function()
 {
-   expected <- c("GTEx.liver.ensg.matrix.asinh", "GTEx.liver.geneSymbols.matrix.asinh")
+   expected <- c("GTEx.liver.geneSymbols.matrix.asinh")
    checkTrue(all(expected %in% getExpressionMatrixNames(tpl)))
 
-   mtx <- getExpressionMatrix(tpl, expected[2])
+   mtx <- getExpressionMatrix(tpl, expected[1])
    checkEquals(dim(mtx), c(29253, 175))
    checkEquals(head(sort(rownames(mtx)), n=3), c("A1BG", "A1BG-AS1", "A2M-AS1"))
 
@@ -101,13 +92,13 @@ test_setTargetGene <- function()
 
    message(sprintf("    enhancers"))
    tbl.enhancers <- getEnhancers(tpl)
-   checkEquals(colnames(tbl.enhancers), c("chrom", "start", "end", "type", "combinedScore", "geneSymbol"))
+   checkEquals(head(colnames(tbl.enhancers)), c("chrom", "start", "end", "gene", "eqtl", "hic"))
    checkTrue(nrow(tbl.enhancers) >= 0)
 
    message(sprintf("    geneGeneEnhancersRegion"))
    region <- getGeneEnhancersRegion(tpl, flankingPercent=0)
    checkTrue(all(c("chromLocString", "chrom", "start", "end") %in% names(region)))
-   checkEquals(region$chromLocString, "chr6:30554823-32372101")
+   checkEquals(region$chrom, "chr6")
 
    message(sprintf("    encode DHS"))
    tbl.dhs <- getEncodeDHS(tpl)
