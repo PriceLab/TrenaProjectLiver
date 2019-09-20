@@ -10,7 +10,8 @@ trenaProject <- TrenaProjectLiver()
 
 # I added some minor parcing of the expression matrix to get rid of genes with no expression.
 #matrix.name <- "GTEx.liver.geneSymbols.matrix.asinh"
-matrix.name <- "GTEx.liver.train.RData"
+# matrix.name <- "GTEx.liver.train.RData"
+matrix.name <- "GTEx.liver.geneSymbols.matrix.asinh"
 stopifnot(matrix.name %in% getExpressionMatrixNames(trenaProject))
 mtx <- getExpressionMatrix(trenaProject, matrix.name)
 mtx.df <- as.data.frame(mtx)
@@ -26,7 +27,7 @@ tbl.geneHancer <- get(load(system.file(package="TrenaProject", "extdata", "genom
 tbl.geneInfo <- get(load(system.file(package="TrenaProject", "extdata", "geneInfoTable_hg38.RData")))
 tbl.geneInfo <- tbl.geneInfo[!duplicated(tbl.geneInfo$geneSymbol),]
 
-OUTPUTDIR <- "/tmp/MODELS.cory.liver.Sept18"
+OUTPUTDIR <- "/tmp/MODELS.cory.liver.Sept20"
 
 if(!file.exists(OUTPUTDIR))
    dir.create(OUTPUTDIR)
@@ -95,11 +96,23 @@ test_pickGuineaPigGenes <- function()
 
 } # test_pickGuineaPigGenes
 #------------------------------------------------------------------------------------------------------------------------
+determineRegulatoryRegions <- function(gene)
+{
+
+       # getEnhancerTissue(trenaProj)  tissue names are idiosyncratic, look for your preferred subset here, or use "all"
+
+  tbl.ghSupplemented <- getGeneRegulatoryRegions(trenaProject, targetGene=gene, tissues="all",
+                                                 geneHancerSupplemental.promoter.upstream=2000,
+                                                 geneHancerSupplemental.promoter.downstream=2000,
+                                                 geneHancerMissing.promoter.upstream=5000,
+                                                 geneHancerMissing.promoter.downstream=5000)
+} # determineRegulatoryRegions
+#------------------------------------------------------------------------------------------------------------------------
 # cory's AD method:
 # if there are no enhancers entry: use tss +/- 5kb
 # if there are enhancers, use those enhancers and +/- 2kb
 #
-determineRegulatoryRegions <- function(gene)
+old.determineRegulatoryRegions <- function(gene)
 {
     tbl.concise <- tbl.geneInfo[which(tbl.geneInfo$geneSymbol == gene), c("chrom", "tss")]
       # no need to figure strand since we go 2500bp in both directions
@@ -132,7 +145,7 @@ determineRegulatoryRegions <- function(gene)
 
    return(tbl.reduced)
 
-} # determineRegulatoryRegions
+} # old.determineRegulatoryRegions
 #------------------------------------------------------------------------------------------------------------------------
 test_determineRegulatoryRegions <- function()
 {
@@ -140,13 +153,16 @@ test_determineRegulatoryRegions <- function()
 
    tbl.gh <- determineRegulatoryRegions("GSTM1")   # has genehancer regions
    checkTrue(nrow(tbl.gh) >= 10)
-   tss.gstm1 <- subset(tbl.geneInfo, geneSymbol=="GSTM1")$tss
-   gr.10kpromoter <- GRanges(data.frame(chr="chr1", start=tss.gstm1-2000, end=tss.gstm1+2000, stringsAsFactors=FALSE))
+   tss.gstm1 <- getTranscriptsTable(trenaProject, "GSTM1")$tss
+      # since gstml has genehancer regions, determineRegulatoryRegions only adds +-2kb around the tss
+      # check this by ensuring that a region nearly that big overlaps completely with
+      # that presumably added row in tbl.gh
+   gr.testPromoter <- GRanges(data.frame(chr="chr1", start=tss.gstm1-1000, end=tss.gstm1+1000, stringsAsFactors=FALSE))
    gr.regions <- GRanges(tbl.gh)
-   checkEquals(length(findOverlaps(gr.10kpromoter, gr.regions, type="within")), 1)
+   checkEquals(length(findOverlaps(gr.testPromoter, gr.regions, type="within")), 1)
 
    tbl.no.gh <- determineRegulatoryRegions("RBMXP2")    # no genehancer regions
-   checkEquals(dim(tbl.no.gh), c(1,3))
+   checkEquals(nrow(tbl.no.gh), 1)
    with(tbl.no.gh, checkEquals(end - start, 10000))
 
 } # test_determineRegulatoryRegions

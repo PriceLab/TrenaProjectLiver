@@ -1,7 +1,7 @@
 Package: TrenaProjectLiver
 Title: Liver GTex gene expression and variant data
-Date: 2019-09-18
-Version: 1.0.0
+Date: 2019-09-20
+Version: 1.0.1
 Author: Cory Funk, Paul Shannon
 Maintainer: Cory Funk <cfunk@systemsbiology.org>
 Description: Trena and TrenaViz project to explore GTex liver gene regulation

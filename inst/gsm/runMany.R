@@ -127,6 +127,18 @@ do.run <- function(genes, parallel=TRUE)
 
 } # do.run
 #----------------------------------------------------------------------------------------------------
+# precheck to see if model already exists (helpful if genome-scale-model is interupted)
+# this should be used if you need to skip genes for which the models are already in the OUTPUTDIR
+checkFile <- function(OUTPUTDIR)
+{
+   all.models <- list.files(OUTPUTDIR, full=T, pattern = ".RData")
+   good.models <- all.models[sapply(all.models, file.size) > 200] # I chose 200 because empty dataframes have a size of 160
+   good.names <- strsplit(good.models, "/")
+   just.names <- lapply(good.names, "[", 4)
+   just.names <- gsub(".RData", "", just.names)
+   return(just.names)
+}
+#----------------------------------------------------------------------------------------------------
 demoGenes <- function()
 {
    genes <- c("GSTM1", "RBMXP2", "INKA2", "APOE")
@@ -168,4 +180,18 @@ if(!interactive()){
    printf("running with genes %d - %d", startGeneIndex, endGeneIndex)
    x <- do.run(goi.thisRun, parallel=TRUE)
    }
+
+if(interactive()){  # for development and debugging
+   startGeneIndex <- 1
+   endGeneIndex <- 3
+   completed.models <- checkFile(OUTPUTDIR)
+   goi.thisRun <- goi[startGeneIndex:endGeneIndex]
+   goi.thisRun <- setdiff(goi.thisRun, completed.models)
+   deleters <- grep("^MIR", goi.thisRun)
+   if(length(deleters) > 0)
+      goi.thisRun <- goi.thisRun[-deleters]
+   printf("running with genes %d - %d", startGeneIndex, endGeneIndex)
+   x <- do.run(goi.thisRun, parallel=FALSE)
+  }
+
 #------------------------------------------------------------------------------
